@@ -1,102 +1,57 @@
-# FlashMaster
+🎴 FlashMaster
 
-FlashMaster is a simple flashcard and quiz app you can run on your own computer. It has a page where you can paste an API key, or skip that step and still use the flashcards and quizzes.
+A simple flashcard and quiz app designed as a supplemental study tool for A+ certification review YouTube videos. No setup needed for users — just click a link and start studying.
 
-## ⭐ Easy Setup for New Users
+🎴🎴 🚀 Quickest Way — Deploy to Vercel (Recommended)
 
-### 1. Install Node.js
+This gives you a live link your users can click to use the app instantly.
 
-- Install Node.js if you do not already have it.
-- Use the installer from: https://nodejs.org/
+🎴🎴🎴 Step 1: Push to GitHub
 
-### 2. Open the project folder
+1. If you haven't already, push this code to GitHub.
+2. Your repository should be called `flashmaster`.
 
-- Open this folder in your computer's file browser.
-- You should see files like `package.json`, `vite.config.js`, and a `src` folder.
+🎴🎴🎴 Step 2: Deploy to Vercel
 
-### 3. Install the app files
+1. Go to [vercel.com](https://vercel.com).
+2. Sign in with GitHub.
+3. Click **Add new project**.
+4. Select the `flashmaster` repository.
+5. Click **Deploy**.
 
-- Open the folder in PowerShell or Command Prompt.
-- Run this command:
+That's it. Vercel builds and deploys automatically.
 
-```bash
-npm install
-```
+🎴🎴🎴 Step 3: Share the link
 
-### 4. Start the app
+Vercel gives you a live URL like `https://flashmaster.vercel.app`. Share this with your users.
 
-- After install finishes, run this command:
+Users just click the link and use the app. No setup, no downloads, no technical knowledge needed.
 
-```bash
-npm run dev
-```
+🎴🎴 🌐 What Users See
 
-### 5. Open the app in your browser
+1. Open the link.
+2. See the FlashMaster landing page.
+3. Click **Continue without API key** (or paste an Anthropic API key if they have one).
+4. Use **Flashcards** or **MCQ Test** tabs to study.
 
-- Open this address:
+🎴🎴 💡 Other Deployment Options
 
-```text
-http://localhost:5173
-```
+- **Netlify** — Similar to Vercel, free and easy. Go to [netlify.com](https://netlify.com).
+- **GitHub Pages** — Free, but requires more setup steps.
 
-## ✅ What to do on the first page
+🎴🎴 ⚙️ For Developers — Local Setup
 
-- Paste your Anthropic API key in the box if you have one.
-- Click the `Enter API key` button.
-- If you do not want to use a key, click `Continue without API key`.
-- Then use the `Flashcards` or `MCQ Test` tabs.
+If you want to run the app on your own computer:
 
-## 📌 Important notes
+1. Install Node.js from https://nodejs.org/
+2. Open the project folder in PowerShell or Command Prompt.
+3. Run `npm install`
+4. Run `npm run dev`
+5. Open `http://localhost:5173` in your browser.
 
-- The app does not save your API key.
-- If you do not paste a key, the app still works.
-- The key should start with `sk-ant-` if you use one.
+🎴🎴 📌 Notes
 
-## 📂 Files to know
+- The app does not save the API key.
+- Flashcards and MCQs work without an API key.
+- The API key should start with `sk-ant-` if used.
 
-- `src/App.jsx` — the main app screen and buttons.
-- `src/data.js` — the flashcards and quiz questions.
-- `src/engine.js` — the app logic that prepares the cards.
-- `main.jsx` — the file that starts the app.
-
-## 🧩 If something does not work
-
-- Make sure Node.js is installed.
-- Run `npm install` again.
-- Run `npm run dev` again.
-- Open `http://localhost:5173` in your browser.
-
-## 🌐 Easy way — Use the web app (No setup needed for users)
-
-The easiest way for users to use FlashMaster is to deploy it online. They just click a link.
-
-### Deploy to Vercel (Free & Easiest)
-
-1. Push this code to GitHub (if you haven't already).
-2. Go to [vercel.com](https://vercel.com).
-3. Sign in with GitHub.
-4. Click **Add new project**.
-5. Select the `flashmaster` repository.
-6. Click **Deploy**.
-7. Vercel gives you a live link.
-
-**That's it.** Share the link with users. They click it and use the app. No setup, no git, no Node.js.
-
-### Other options
-
-- **Netlify** — Similar to Vercel, free and easy.
-- **GitHub Pages** — Free, but requires a build step.
-
-## 🧱 Local standalone app
-
-After building, the app can also run by itself from the `dist` folder.
-
-1. Run:
-
-```bash
-npm run build
-```
-
-2. Open the file `dist/index.html` in your browser.
-
-That will load the app directly from the built files without needing a server.
