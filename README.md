@@ -66,29 +66,28 @@ http://localhost:5173
 - Run `npm run dev` again.
 - Open `http://localhost:5173` in your browser.
 
-## 🌐 Run it as a web app
+## 🌐 Easy way — Use the web app (No setup needed for users)
 
-If you want the app to open from a website instead of your own computer:
+The easiest way for users to use FlashMaster is to deploy it online. They just click a link.
 
-1. Run this command to make the website files:
+### Deploy to Vercel (Free & Easiest)
 
-```bash
-npm run build
-```
+1. Push this code to GitHub (if you haven't already).
+2. Go to [vercel.com](https://vercel.com).
+3. Sign in with GitHub.
+4. Click **Add new project**.
+5. Select the `flashmaster` repository.
+6. Click **Deploy**.
+7. Vercel gives you a live link.
 
-2. Upload the files from the `dist` folder to any web hosting service.
+**That's it.** Share the link with users. They click it and use the app. No setup, no git, no Node.js.
 
-3. Open the website address the host gives you.
+### Other options
 
-Many free hosts work, such as:
+- **Netlify** — Similar to Vercel, free and easy.
+- **GitHub Pages** — Free, but requires a build step.
 
-- Vercel
-- Netlify
-- GitHub Pages
-
-The app is a normal web app, so no extra server is needed.
-
-## 🧱 Run it as a standalone app
+## 🧱 Local standalone app
 
 After building, the app can also run by itself from the `dist` folder.
 
