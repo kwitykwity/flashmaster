@@ -102,19 +102,6 @@ export const DECK_CONFIG = {
 // ------------------------------------------------------------
 //  STEP 2 — ADD YOUR DATA
 // ------------------------------------------------------------
-//
-//  Each object must use the exact field names from DECK_CONFIG.fields above.
-//  The "desc" field is always available for an extra description line.
-//
-//  CURRENT SUBJECT: CompTIA A+ Networking Ports
-//
-//  TO SWITCH SUBJECTS — example: Korean vocabulary
-//  Change fields above to:
-//    fieldA: "korean", fieldB: "romanization", fieldC: "english", fieldD: "partOfSpeech"
-//  Then replace ITEMS with Korean vocabulary entries like:
-//    { korean: "사과", romanization: "sagwa", english: "apple", partOfSpeech: "noun", desc: "A common fruit" }
-//
-// ------------------------------------------------------------
 
 export const ITEMS = [
   { port: "20",   protocol: "FTP",     full: "File Transfer Protocol",               desc: "Data transfer channel (active mode)",              type: "TCP"     },
@@ -149,7 +136,7 @@ export const ITEMS = [
 //  KOREAN VOCABULARY EXAMPLE (commented out)
 //  To use: rename fields above, uncomment this, delete ITEMS above
 // ------------------------------------------------------------
-//
+
 // export const DECK_CONFIG = {
 //   title: "Korean Vocabulary",
 //   subtitle: "Beginner — TOPIK I",
@@ -183,3 +170,6 @@ export const ITEMS = [
 //   { korean: "먹다", romanization: "meokda",  english: "to eat", partOfSpeech: "verb",    desc: "Eating action" },
 //   { korean: "크다", romanization: "keuda",   english: "big",    partOfSpeech: "adjective",desc: "Large in size" },
 // ];
+
+// Make ITEMS available globally for MCQ explanations
+if (typeof window !== "undefined") window.ITEMS = ITEMS;
