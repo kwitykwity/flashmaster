@@ -123,6 +123,24 @@ const STYLES = `
 
   .shuffle-toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1a0d2e; border: 1.5px solid #6B3FA0; color: #c89ef0; padding: 12px 28px; border-radius: 30px; font-family: 'Abril Fatface', serif; font-size: 1rem; letter-spacing: 0.05em; z-index: 1000; animation: toast-in 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 30px rgba(107,63,160,0.4); }
   @keyframes toast-in { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+
+  .explain-panel { width: min(360px, calc(100vw - 64px)); border-radius: 10px; border: 1.5px solid #9B111E; background: #120408; overflow: hidden; animation: explain-in 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  @media (max-width: 480px) { .explain-panel { width: calc(100vw - 6px); } }
+  @keyframes explain-in { from{transform:translateY(-12px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .explain-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px 8px; border-bottom: 1px solid #2a0a10; }
+  .explain-title { font-family: 'Abril Fatface', serif; font-size: 0.82rem; color: #e57373; letter-spacing: 0.08em; }
+  .explain-body { padding: 12px 14px 14px; font-family: 'Arvo', serif; font-size: clamp(0.78rem,2.2vw,0.88rem); color: #ddd; line-height: 1.65; }
+  .explain-shimmer { display: flex; align-items: center; gap: 10px; padding: 14px; }
+  .shimmer-dots { display: flex; gap: 5px; }
+  .shimmer-dot { width: 7px; height: 7px; border-radius: 50%; background: #9B111E; animation: dot-pulse 1.2s ease-in-out infinite; }
+  .shimmer-dot:nth-child(2) { animation-delay: 0.2s; }
+  .shimmer-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot-pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+  .shimmer-text { font-family: 'Arvo', serif; font-size: 0.8rem; color: #555; font-style: italic; }
+  .explain-next { display: block; width: calc(100% - 28px); margin: 0 14px 14px; padding: 9px 0; background: transparent; border: 1.5px solid #6B3FA0; border-radius: 20px; color: #c89ef0; font-family: 'Arvo', serif; font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .explain-next:hover { background: #1a0d2e; }
+  .explain-next-correct { display: block; width: calc(100% - 28px); margin: 8px 14px 14px; padding: 9px 0; background: transparent; border: 1.5px solid #046307; border-radius: 20px; color: #4caf50; font-family: 'Arvo', serif; font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .explain-next-correct:hover { background: #0d1a0d; }
 `;
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -197,11 +215,71 @@ function FlashcardView({ cards }) {
   );
 }
 
+// ── Explanation Panel ─────────────────────────────────────────
+function ExplanationPanel({ question, chosen, apiKey, onNext }) {
+  const [explanation, setExplanation] = useState(null);
+  const [loading, setLoading]         = useState(false);
+
+  useEffect(() => {
+    if (apiKey === "NO_KEY") {
+      setExplanation("Add an API key on the start screen to unlock explanations.");
+      return;
+    }
+    setLoading(true);
+    const prompt = `A student is studying CompTIA A+ networking ports. They answered a multiple choice question incorrectly.
+
+Question: ${question.q}
+Their answer: ${chosen}
+Correct answer: ${question.correct}
+
+In 2-3 sentences, explain clearly why "${question.correct}" is correct and give one memorable tip or mnemonic to help them remember it. Be direct and specific. Do not start with "I" or repeat the question back.`;
+
+    fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 180,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const text = data?.content?.[0]?.text || "Could not load explanation — check your API key.";
+        setExplanation(text);
+      })
+      .catch(() => setExplanation("Could not reach the API. Check your key and network connection."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="explain-panel">
+      <div className="explain-header">
+        <span className="explain-title">✦ Why the correct answer is: {question.correct}</span>
+      </div>
+      {loading ? (
+        <div className="explain-shimmer">
+          <div className="shimmer-dots">
+            <div className="shimmer-dot" />
+            <div className="shimmer-dot" />
+            <div className="shimmer-dot" />
+          </div>
+          <span className="shimmer-text">Fetching explanation...</span>
+        </div>
+      ) : (
+        <div className="explain-body">{explanation}</div>
+      )}
+      <button className="explain-next" onClick={onNext}>Next Question →</button>
+    </div>
+  );
+}
+
 // ── MCQ View ──────────────────────────────────────────────────
-function MCQView({ questions: initialQs }) {
+function MCQView({ questions: initialQs, apiKey }) {
   const [queue, setQueue]               = useState(() => shuffle([...initialQs]));
   const [pos, setPos]                   = useState(0);
   const [selected, setSelected]         = useState(null);
+  const [isCorrect, setIsCorrect]       = useState(null);
   const [shaking, setShaking]           = useState(false);
   const [sparkTrigger, setSparkTrigger] = useState(0);
   const [cycleCorrect, setCycleCorrect] = useState(0);
@@ -210,6 +288,7 @@ function MCQView({ questions: initialQs }) {
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [showToast, setShowToast]       = useState(false);
   const [toastMsg, setToastMsg]         = useState("");
+  const [pendingShuffle, setPendingShuffle] = useState(false);
 
   const current   = queue[pos] || queue[0];
   const colorIdx  = pos % JEWEL_TONES.length;
@@ -226,21 +305,37 @@ function MCQView({ questions: initialQs }) {
     setQueue(shuffle([...initialQs]));
     setPos(0);
     setSelected(null);
+    setIsCorrect(null);
     setCycleCorrect(0);
     setCycleMisses(0);
+    setPendingShuffle(false);
+  };
+
+  const advanceQueue = (wasCorrect, newQueue, currentItem) => {
+    const updated = [...newQueue];
+    if (wasCorrect) {
+      updated.splice(Math.min(pos + 21, updated.length), 0, { ...currentItem });
+    } else {
+      updated.splice(Math.min(pos + 1 + Math.floor(Math.random() * 10), updated.length), 0, { ...currentItem });
+    }
+    setQueue(updated);
+    setPos(p => p + 1);
+    setSelected(null);
+    setIsCorrect(null);
   };
 
   const handleChoice = (choice) => {
     if (selected !== null) return;
     setSelected(choice);
-    const isCorrect = choice === current.correct;
+    const correct = choice === current.correct;
+    setIsCorrect(correct);
     setTotalAnswered(t => t + 1);
-    setTotalCorrect(t => t + (isCorrect ? 1 : 0));
+    setTotalCorrect(t => t + (correct ? 1 : 0));
 
     let newCC = cycleCorrect;
     let newCM = cycleMisses;
 
-    if (isCorrect) {
+    if (correct) {
       playMagicSound();
       setSparkTrigger(t => t + 1);
       newCC = cycleCorrect + 1;
@@ -252,7 +347,6 @@ function MCQView({ questions: initialQs }) {
       setCycleMisses(newCM);
     }
 
-    // Cycle reset: 6th miss fires immediately
     if (newCM >= 6) {
       setTimeout(() => {
         toast("6 misses — cycle resets. Keep going!");
@@ -261,26 +355,19 @@ function MCQView({ questions: initialQs }) {
       }, 900);
     }
 
-    // Shuffle trigger: 75 correct with ≤5 misses in this cycle
     if (newCC >= 75 && newCM <= 5) {
-      setTimeout(triggerShuffle, 1000);
-      return;
+      setPendingShuffle(true);
     }
+  };
 
-    setTimeout(() => {
-      setSelected(null);
-      const newQueue = [...queue];
-      if (isCorrect) {
-        newQueue.splice(Math.min(pos + 21, newQueue.length), 0, { ...current });
-      } else {
-        newQueue.splice(Math.min(pos + 1 + Math.floor(Math.random() * 10), newQueue.length), 0, { ...current });
-      }
-      setQueue(newQueue);
-      setPos(p => p + 1);
-    }, 1100);
+  const handleNext = () => {
+    if (pendingShuffle) { triggerShuffle(); return; }
+    advanceQueue(isCorrect, queue, current);
   };
 
   const progressPct = Math.min((cycleCorrect / 75) * 100, 100);
+  const showExplain  = selected !== null;
+  const showNextOnCard = selected !== null && isCorrect;
 
   return (
     <div className="mcq-outer">
@@ -326,7 +413,7 @@ function MCQView({ questions: initialQs }) {
               if (selected !== null) {
                 cls += " disabled";
                 if (choice === current.correct) cls += " correct";
-                else if (choice === selected) cls += " wrong";
+                else if (choice === selected && !isCorrect) cls += " wrong";
               }
               return (
                 <button key={ci} className={cls} onClick={() => handleChoice(choice)}>
@@ -337,10 +424,26 @@ function MCQView({ questions: initialQs }) {
             })}
           </div>
         </div>
+        {showNextOnCard && (
+          <div style={{ background: "#fffdf5", padding: "0 18px 12px" }}>
+            <button className="explain-next-correct" onClick={handleNext}>
+              Next Question →
+            </button>
+          </div>
+        )}
         <div className="mcq-footer">
           <span className="mcq-footer-text">{APP_SUBTITLE}</span>
         </div>
       </div>
+
+      {showExplain && !isCorrect && (
+        <ExplanationPanel
+          question={current}
+          chosen={selected}
+          apiKey={apiKey}
+          onNext={handleNext}
+        />
+      )}
     </div>
   );
 }
@@ -350,19 +453,14 @@ function APIScreen({ onSubmit }) {
   const [key, setKey]     = useState("");
   const [error, setError] = useState("");
 
-  const submitKey = () => {
-    const trimmedKey = key.trim();
-    if (!trimmedKey.startsWith("sk-ant-")) {
-      setError("Key should start with sk-ant- — check and try again.");
-      return;
-    }
-    setError("");
-    onSubmit(trimmedKey);
-  };
-
   const handleKey = (e) => {
     if (e.key === "Enter") {
-      submitKey();
+      if (!key.trim().startsWith("sk-ant-")) {
+        setError("Key should start with sk-ant- — check and try again.");
+        return;
+      }
+      setError("");
+      onSubmit(key.trim());
     }
   };
 
@@ -400,15 +498,10 @@ function APIScreen({ onSubmit }) {
         autoFocus
         style={{ width: "100%" }}
       />
-      <p className="api-hint">Press Enter to initialize or click Enter key · Key is never stored</p>
+      <p className="api-hint">Press Enter to initialize · Key is never stored</p>
       {error && <p className="api-error">{error}</p>}
 
-      <button className="fc-btn" style={{ borderColor: "#6B3FA0", color: "#c89ef0", width: "100%", maxWidth: "320px" }}
-        onClick={submitKey}>
-        Enter API key
-      </button>
-
-      <button className="fc-btn" style={{ borderColor: "#6B3FA0", color: "#c89ef0", marginTop: 12 }}
+      <button className="fc-btn" style={{ borderColor: "#6B3FA0", color: "#c89ef0" }}
         onClick={() => onSubmit("NO_KEY")}>
         Continue without API key
       </button>
@@ -448,7 +541,7 @@ export default function App() {
         <main className="main-area">
           {tab === "flashcards"
             ? <FlashcardView cards={flashcards} />
-            : <MCQView questions={questions} />}
+            : <MCQView questions={questions} apiKey={apiKey} />}
         </main>
       </div>
     </>
