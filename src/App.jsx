@@ -221,27 +221,13 @@ function ExplanationPanel({ question, chosen, apiKey, onNext }) {
   const [loading, setLoading]         = useState(false);
 
   useEffect(() => {
-    if (apiKey === "NO_KEY") {
-      setExplanation("Add an API key on the start screen to unlock explanations.");
-      return;
-    }
     setLoading(true);
-    const prompt = `A student is studying CompTIA A+ networking ports. They answered a multiple choice question incorrectly.
+    const prompt = `A student is studying CompTIA A+ networking ports. They answered a multiple choice question incorrectly.\n\nQuestion: ${question.q}\nTheir answer: ${chosen}\nCorrect answer: ${question.correct}\n\nIn 2-3 sentences, explain clearly why "${question.correct}" is correct and give one memorable tip or mnemonic to help them remember it. Be direct and specific. Do not start with "I" or repeat the question back.`;
 
-Question: ${question.q}
-Their answer: ${chosen}
-Correct answer: ${question.correct}
-
-In 2-3 sentences, explain clearly why "${question.correct}" is correct and give one memorable tip or mnemonic to help them remember it. Be direct and specific. Do not start with "I" or repeat the question back.`;
-
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("/api/anthropic", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 180,
-        messages: [{ role: "user", content: prompt }],
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     })
       .then(r => r.json())
       .then(data => {
