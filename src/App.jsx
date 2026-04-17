@@ -2,6 +2,7 @@
 //  APP.JSX — DO NOT EDIT
 //  Pure UI. Swap subjects by editing data files only.
 //  Renders SVG illustrations on flashcard backs when available.
+//  Uses /api/anthropic proxy — no API key input needed.
 // ============================================================
 
 import { useState, useEffect } from "react";
@@ -39,7 +40,6 @@ const STYLES = `
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body, #root { background: #000; min-height: 100vh; font-family: 'Arvo', serif; color: #fff; }
-
   .app-wrap { min-height: 100vh; background: #000; display: flex; flex-direction: column; align-items: center; }
 
   .header { width: 100%; padding: 18px 24px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a1a1a; flex-wrap: wrap; gap: 8px; }
@@ -51,21 +51,6 @@ const STYLES = `
 
   .main-area { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 24px 16px; min-height: calc(100vh - 120px); }
 
-  /* API SCREEN */
-  .api-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; min-height: 70vh; width: 100%; max-width: 480px; padding: 32px 20px; }
-  .api-gem { font-size: 3.5rem; animation: pulse-gem 2s ease-in-out infinite; filter: drop-shadow(0 0 18px #6B3FA0); }
-  @keyframes pulse-gem { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 18px #6B3FA0)} 50%{transform:scale(1.08);filter:drop-shadow(0 0 30px #9B111E)} }
-  .api-title { font-family: 'Abril Fatface', serif; font-size: 1.8rem; text-align: center; color: #e8d5f5; letter-spacing: 0.04em; }
-  .api-subtitle { font-family: 'Arvo', serif; font-size: 0.9rem; color: #888; text-align: center; line-height: 1.7; }
-  .api-input { width: 100%; padding: 14px 18px; background: #0d0d0d; border: 1.5px solid #3a2060; border-radius: 10px; color: #e8d5f5; font-family: 'Arvo', serif; font-size: 0.95rem; outline: none; transition: border-color 0.2s; letter-spacing: 0.03em; }
-  .api-input:focus { border-color: #6B3FA0; }
-  .api-input::placeholder { color: #444; }
-  .api-hint { font-size: 0.78rem; color: #555; text-align: center; margin-top: 4px; }
-  .api-error { color: #ff6b6b; font-size: 0.82rem; text-align: center; }
-  .api-link { font-family: 'Arvo', serif; font-size: 0.8rem; text-decoration: none; padding: 6px 14px; border-radius: 16px; letter-spacing: 0.04em; transition: opacity 0.2s; }
-  .api-link:hover { opacity: 0.8; }
-
-  /* FLASHCARD */
   .card-scene { perspective: 1200px; width: min(360px, calc(100vw - 32px)); height: min(240px, calc((100vw - 32px) * 0.667)); }
   @media (max-width: 480px) { .card-scene { width: calc(100vw - 6px); height: calc((100vw - 6px) * 0.667); } }
   .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4,0.2,0.2,1); cursor: pointer; }
@@ -89,7 +74,6 @@ const STYLES = `
   .fc-btn:hover { border-color: #6B3FA0; color: #c89ef0; }
   .fc-counter { font-family: 'Arvo', serif; font-size: 0.82rem; color: #555; }
 
-  /* MCQ */
   .mcq-outer { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
   .mcq-card { width: min(360px, calc(100vw - 32px)); border-radius: 8px; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: card-enter 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   @media (max-width: 480px) { .mcq-card { width: calc(100vw - 6px); } }
@@ -111,13 +95,11 @@ const STYLES = `
   .mcq-footer { background: #fffdf5; padding: 5px 16px 10px; display: flex; justify-content: flex-end; }
   .mcq-footer-text { font-family: 'Arvo', serif; font-size: 0.65rem; color: #aaa; font-style: italic; }
 
-  /* COUNTERS */
   .counters { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   .counter-gem { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 14px; border-radius: 10px; min-width: 66px; border: 1.5px solid; }
   .counter-num { font-family: 'Abril Fatface', serif; font-size: 1.3rem; line-height: 1; }
   .counter-label { font-family: 'Arvo', serif; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
 
-  /* SPARKLE */
   .sparkle-container { position: fixed; pointer-events: none; inset: 0; z-index: 9999; }
   .sparkle { position: absolute; width: 8px; height: 8px; border-radius: 50%; animation: sparkle-fly 0.8s ease-out forwards; }
   @keyframes sparkle-fly { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0} }
@@ -129,7 +111,6 @@ const STYLES = `
   .shuffle-toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1a0d2e; border: 1.5px solid #6B3FA0; color: #c89ef0; padding: 12px 28px; border-radius: 30px; font-family: 'Abril Fatface', serif; font-size: 1rem; letter-spacing: 0.05em; z-index: 1000; animation: toast-in 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 30px rgba(107,63,160,0.4); white-space: nowrap; }
   @keyframes toast-in { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
 
-  /* EXPLANATION PANEL */
   .explain-panel { width: min(360px, calc(100vw - 32px)); border-radius: 10px; border: 1.5px solid #9B111E; background: #120408; overflow: hidden; animation: explain-in 0.35s cubic-bezier(0.34,1.56,0.64,1); }
   @media (max-width: 480px) { .explain-panel { width: calc(100vw - 6px); } }
   @keyframes explain-in { from{transform:translateY(-12px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -151,7 +132,6 @@ const STYLES = `
 
 const LETTERS = ["A", "B", "C", "D"];
 
-// ── Sparkles ─────────────────────────────────────────────────
 function Sparkles({ trigger }) {
   const [sparks, setSparks] = useState([]);
   useEffect(() => {
@@ -171,13 +151,13 @@ function Sparkles({ trigger }) {
   return (
     <div className="sparkle-container">
       {sparks.map(s => (
-        <div key={s.id} className="sparkle" style={{ left: s.x, top: s.y, background: s.color, "--tx": s.tx, "--ty": s.ty }} />
+        <div key={s.id} className="sparkle"
+          style={{ left: s.x, top: s.y, background: s.color, "--tx": s.tx, "--ty": s.ty }} />
       ))}
     </div>
   );
 }
 
-// ── Flashcard View ────────────────────────────────────────────
 function FlashcardView({ cards }) {
   const [idx, setIdx]         = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -196,27 +176,22 @@ function FlashcardView({ cards }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div className="card-scene" onClick={() => setFlipped(f => !f)}>
         <div className={`card-inner${flipped ? " flipped" : ""}`}>
-
-          {/* FRONT */}
           <div className="card-face card-front" style={{ background: color.front }}>
             <span className="card-label">{card.frontLabel}</span>
             <span className="card-main">{card.front}</span>
             <span className="card-hint">click to flip</span>
           </div>
-
-          {/* BACK — visual or text */}
           <div className="card-face card-back" style={{ borderColor: color.front }}>
             <span className="card-label" style={{ color: color.front }}>{card.backLabel}</span>
             {VisualFn ? (
-              <div className="card-visual">
-                <VisualFn />
-              </div>
+              <div className="card-visual"><VisualFn /></div>
             ) : (
               <>
                 <span className="card-main" style={{ color: "#1a1a1a" }}>{backParts[0]}</span>
                 {backParts[1] && <span className="card-desc">{backParts[1]}</span>}
                 {backParts[2] && (
-                  <span className="card-type-badge" style={{ background: color.light || "#eee", color: color.front }}>
+                  <span className="card-type-badge"
+                    style={{ background: color.light || "#eee", color: color.front }}>
                     {backParts[2].replace(/[\[\]]/g, "")}
                   </span>
                 )}
@@ -225,7 +200,6 @@ function FlashcardView({ cards }) {
           </div>
         </div>
       </div>
-
       <div className="fc-nav">
         <button className="fc-btn" onClick={() => go(-1)}>← Prev</button>
         <span className="fc-counter">{idx + 1} / {cards.length}</span>
@@ -235,16 +209,11 @@ function FlashcardView({ cards }) {
   );
 }
 
-// ── Explanation Panel ─────────────────────────────────────────
-function ExplanationPanel({ question, chosen, apiKey, onNext }) {
+function ExplanationPanel({ question, chosen, onNext }) {
   const [explanation, setExplanation] = useState(null);
   const [loading, setLoading]         = useState(false);
 
   useEffect(() => {
-    if (apiKey === "NO_KEY") {
-      setExplanation("Add an API key on the start screen to unlock AI-powered explanations.");
-      return;
-    }
     setLoading(true);
     const prompt = `A student is studying for CompTIA A+ Core 1 (220-1201). They answered a multiple choice question incorrectly.
 
@@ -254,25 +223,17 @@ Correct answer: ${question.correct}
 
 In 2-3 sentences, explain clearly why "${question.correct}" is correct and give one memorable tip or mnemonic to help them remember it. Be direct and specific. Do not start with "I" or repeat the question back.`;
 
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("/api/anthropic", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 180,
-        messages: [{ role: "user", content: prompt }],
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     })
       .then(r => r.json())
       .then(data => {
-        const text = data?.content?.[0]?.text || "Could not load explanation — check your API key.";
+        const text = data?.content?.[0]?.text || "Could not load explanation. Please try again.";
         setExplanation(text);
       })
-      .catch(() => setExplanation("Could not reach the API. Check your key and network connection."))
+      .catch(() => setExplanation("Could not reach the explanation service. Check your network connection."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -284,7 +245,9 @@ In 2-3 sentences, explain clearly why "${question.correct}" is correct and give 
       {loading ? (
         <div className="explain-shimmer">
           <div className="shimmer-dots">
-            <div className="shimmer-dot" /><div className="shimmer-dot" /><div className="shimmer-dot" />
+            <div className="shimmer-dot" />
+            <div className="shimmer-dot" />
+            <div className="shimmer-dot" />
           </div>
           <span className="shimmer-text">Fetching explanation...</span>
         </div>
@@ -296,8 +259,7 @@ In 2-3 sentences, explain clearly why "${question.correct}" is correct and give 
   );
 }
 
-// ── MCQ View ──────────────────────────────────────────────────
-function MCQView({ questions: initialQs, apiKey }) {
+function MCQView({ questions: initialQs }) {
   const [queue, setQueue]               = useState(() => shuffle([...initialQs]));
   const [pos, setPos]                   = useState(0);
   const [selected, setSelected]         = useState(null);
@@ -374,7 +336,10 @@ function MCQView({ questions: initialQs, apiKey }) {
     if (isCorrect) {
       newQueue.splice(Math.min(pos + 21, newQueue.length), 0, { ...current });
     } else {
-      newQueue.splice(Math.min(pos + 1 + Math.floor(Math.random() * 10), newQueue.length), 0, { ...current });
+      newQueue.splice(
+        Math.min(pos + 1 + Math.floor(Math.random() * 10), newQueue.length),
+        0, { ...current }
+      );
     }
     setQueue(newQueue);
     setPos(p => p + 1);
@@ -409,7 +374,8 @@ function MCQView({ questions: initialQs, apiKey }) {
       </div>
 
       <div className="progress-bar-wrap">
-        <div className="progress-bar-fill" style={{ width: progressPct + "%", background: "linear-gradient(90deg,#046307,#6B3FA0)" }} />
+        <div className="progress-bar-fill"
+          style={{ width: progressPct + "%", background: "linear-gradient(90deg,#046307,#6B3FA0)" }} />
       </div>
       <div className="cycle-info">
         {cycleCorrect}/75 correct · {Math.max(0, 5 - cycleMisses)} misses remaining this cycle
@@ -455,7 +421,6 @@ function MCQView({ questions: initialQs, apiKey }) {
         <ExplanationPanel
           question={current}
           chosen={selected}
-          apiKey={apiKey}
           onNext={handleNext}
         />
       )}
@@ -463,81 +428,10 @@ function MCQView({ questions: initialQs, apiKey }) {
   );
 }
 
-// ── API Key Screen ────────────────────────────────────────────
-function APIScreen({ onSubmit }) {
-  const [key, setKey]     = useState("");
-  const [error, setError] = useState("");
-
-  const handleKey = (e) => {
-    if (e.key === "Enter") {
-      if (!key.trim().startsWith("sk-ant-")) {
-        setError("Key should start with sk-ant- — check and try again.");
-        return;
-      }
-      setError("");
-      onSubmit(key.trim());
-    }
-  };
-
-  return (
-    <div className="api-screen">
-      <div className="api-gem">💎</div>
-      <h1 className="api-title">{APP_TITLE}</h1>
-      <p className="api-subtitle">
-        Enter your Anthropic API key to unlock<br />
-        AI-powered explanations on wrong answers.<br />
-        Flashcards &amp; MCQs work without one.
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
-        <p className="api-hint" style={{ color: "#666", marginBottom: 0 }}>Don't have a key yet?</p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          <a href="https://www.anthropic.com/api" target="_blank" rel="noopener noreferrer"
-            className="api-link" style={{ color: "#c89ef0", border: "1px solid #3a2060", background: "#0d0820" }}>
-            ✦ Sign up for API access
-          </a>
-          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
-            className="api-link" style={{ color: "#9fd4f7", border: "1px solid #0e2d4a", background: "#050e18" }}>
-            ✦ Go to API key console
-          </a>
-        </div>
-      </div>
-      <input
-        className="api-input"
-        type="password"
-        placeholder="sk-ant-api03-..."
-        value={key}
-        onChange={e => setKey(e.target.value)}
-        onKeyDown={handleKey}
-        autoFocus
-        style={{ width: "100%" }}
-      />
-      <p className="api-hint">Press Enter to initialize · Key is never stored</p>
-      {error && <p className="api-error">{error}</p>}
-      <button className="fc-btn" style={{ borderColor: "#6B3FA0", color: "#c89ef0" }}
-        onClick={() => onSubmit("NO_KEY")}>
-        Continue without API key
-      </button>
-    </div>
-  );
-}
-
-// ── Root App ──────────────────────────────────────────────────
 export default function App() {
-  const [apiKey,     setApiKey]  = useState(null);
   const [tab,        setTab]     = useState("flashcards");
   const [flashcards] = useState(buildFlashcards);
   const [questions]  = useState(buildMCQs);
-
-  if (!apiKey) {
-    return (
-      <>
-        <style>{STYLES}</style>
-        <div className="app-wrap">
-          <APIScreen onSubmit={setApiKey} />
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -546,10 +440,14 @@ export default function App() {
         <header className="header">
           <span className="header-title">{APP_TITLE} · A+ 220-1201</span>
           <nav className="nav-tabs">
-            <button className={`nav-tab${tab === "flashcards" ? " active" : ""}`} onClick={() => setTab("flashcards")}>
+            <button
+              className={`nav-tab${tab === "flashcards" ? " active" : ""}`}
+              onClick={() => setTab("flashcards")}>
               Flashcards
             </button>
-            <button className={`nav-tab${tab === "mcq" ? " active" : ""}`} onClick={() => setTab("mcq")}>
+            <button
+              className={`nav-tab${tab === "mcq" ? " active" : ""}`}
+              onClick={() => setTab("mcq")}>
               MCQ Test
             </button>
           </nav>
@@ -557,7 +455,7 @@ export default function App() {
         <main className="main-area">
           {tab === "flashcards"
             ? <FlashcardView cards={flashcards} />
-            : <MCQView questions={questions} apiKey={apiKey} />}
+            : <MCQView questions={questions} />}
         </main>
       </div>
     </>
