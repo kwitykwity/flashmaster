@@ -305,7 +305,6 @@ function MCQView({ questions: initialQs }) {
     setSelected(choice);
     const correct = choice === current.correct;
     setIsCorrect(correct);
-    setTotalAnswered(t => t + 1);
     setTotalCorrect(t => t + (correct ? 1 : 0));
 
     let newCC = cycleCorrect;
@@ -398,8 +397,8 @@ function MCQView({ questions: initialQs }) {
           <span className="counter-label">Total ✓</span>
         </div>
         <div className="counter-gem" style={{ background: "#1a0d2e", borderColor: "#6B3FA0", color: "#c89ef0" }}>
-          <span className="counter-num">{totalAnswered + 1}</span>
-          <span className="counter-label">Question</span>
+          <span className="counter-num">{totalAnswered}</span>
+          <span className="counter-label">Answered</span>
         </div>
       </div>
 
