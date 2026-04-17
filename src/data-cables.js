@@ -1,0 +1,217 @@
+// ============================================================
+//  DATA-CABLES.JS
+//  CompTIA A+ 220-1201 Objective 3.2
+//  Cable types, connectors, features, and purposes
+// ============================================================
+
+export const CABLES_DATA = [
+  // ── Network Cables ──────────────────────────────────────────
+  {
+    term:       "RJ-45",
+    definition: "Registered Jack 45",
+    detail:     "8-pin connector used for Ethernet networking",
+    category:   "Network Cable",
+    extra:       "Cat5e / Cat6 / Cat6a · Up to 100m",
+    visual:     "rj45",
+  },
+  {
+    term:       "RJ-11",
+    definition: "Registered Jack 11",
+    detail:     "4-pin connector used for telephone and DSL lines",
+    category:   "Network Cable",
+    extra:       "Telephone / DSL · Smaller than RJ-45",
+    visual:     "rj11",
+  },
+  {
+    term:       "Cat 5e",
+    definition: "Category 5 Enhanced",
+    detail:     "Supports up to 1 Gbps at 100MHz over 100m",
+    category:   "Network Cable",
+    extra:       "UTP · 4 twisted pairs · Most common legacy",
+    visual:     null,
+  },
+  {
+    term:       "Cat 6",
+    definition: "Category 6",
+    detail:     "Supports up to 10 Gbps at 250MHz up to 55m",
+    category:   "Network Cable",
+    extra:       "UTP/STP · Spline separator · Reduced crosstalk",
+    visual:     null,
+  },
+  {
+    term:       "Cat 6a",
+    definition: "Category 6 Augmented",
+    detail:     "Supports 10 Gbps at 500MHz over full 100m",
+    category:   "Network Cable",
+    extra:       "STP · Heavier/thicker · Data centers",
+    visual:     null,
+  },
+  {
+    term:       "Coaxial",
+    definition: "Coaxial Cable",
+    detail:     "Center conductor surrounded by shielding — used for cable TV and broadband",
+    category:   "Network Cable",
+    extra:       "RG-6 / RG-59 · F-type or BNC connector",
+    visual:     "coaxial",
+  },
+  {
+    term:       "Fiber Optic",
+    definition: "Fiber Optic Cable",
+    detail:     "Transmits data as light pulses — immune to EMI, very high speed",
+    category:   "Network Cable",
+    extra:       "Single-mode (SMF) / Multi-mode (MMF)",
+    visual:     "fiber",
+  },
+  {
+    term:       "LC Connector",
+    definition: "Lucent Connector",
+    detail:     "Small form-factor fiber connector — most common in data centers",
+    category:   "Network Cable",
+    extra:       "Push-pull latch · Duplex common · SMF/MMF",
+    visual:     "lc",
+  },
+  {
+    term:       "SC Connector",
+    definition: "Subscriber Connector",
+    detail:     "Square fiber connector with push-pull coupling mechanism",
+    category:   "Network Cable",
+    extra:       "Snap-in · Larger than LC · SMF/MMF",
+    visual:     "sc",
+  },
+  {
+    term:       "ST Connector",
+    definition: "Straight Tip Connector",
+    detail:     "Bayonet-style fiber connector — twist and lock",
+    category:   "Network Cable",
+    extra:       "Older standard · MMF · Campus networks",
+    visual:     null,
+  },
+
+  // ── Video Cables ─────────────────────────────────────────────
+  {
+    term:       "HDMI",
+    definition: "High-Definition Multimedia Interface",
+    detail:     "Carries digital audio and video — up to 8K resolution",
+    category:   "Video Cable",
+    extra:       "19-pin trapezoidal · Type A most common · Up to 48Gbps",
+    visual:     "hdmi",
+  },
+  {
+    term:       "DisplayPort",
+    definition: "DisplayPort",
+    detail:     "Digital video and audio — high refresh rates, daisy-chaining",
+    category:   "Video Cable",
+    extra:       "20-pin · Notched corner · Up to 80Gbps (DP 2.1)",
+    visual:     "displayport",
+  },
+  {
+    term:       "VGA",
+    definition: "Video Graphics Array",
+    detail:     "Analog video only — legacy connector, no audio",
+    category:   "Video Cable",
+    extra:       "15-pin DE-15 · Blue trapezoidal · Max 2048x1536",
+    visual:     "vga",
+  },
+  {
+    term:       "DVI",
+    definition: "Digital Visual Interface",
+    detail:     "Carries digital and/or analog video — common on older monitors",
+    category:   "Video Cable",
+    extra:       "DVI-D (digital) / DVI-A (analog) / DVI-I (both)",
+    visual:     "dvi",
+  },
+  {
+    term:       "Thunderbolt 3/4",
+    definition: "Thunderbolt 3 and 4",
+    detail:     "High-speed data, video, and power over USB-C connector",
+    category:   "Video Cable",
+    extra:       "USB-C connector · Up to 40Gbps · DP + PCIe + USB",
+    visual:     "usbc",
+  },
+
+  // ── USB Cables ───────────────────────────────────────────────
+  {
+    term:       "USB-A",
+    definition: "Universal Serial Bus Type A",
+    detail:     "Standard rectangular host connector — downstream port",
+    category:   "USB Cable",
+    extra:       "USB 2.0 (480Mbps) / 3.0 (5Gbps) / 3.1 (10Gbps)",
+    visual:     "usba",
+  },
+  {
+    term:       "USB-B",
+    definition: "Universal Serial Bus Type B",
+    detail:     "Square printer/device connector — upstream port",
+    category:   "USB Cable",
+    extra:       "USB 2.0 common · Printers, scanners",
+    visual:     "usbb",
+  },
+  {
+    term:       "USB-C",
+    definition: "Universal Serial Bus Type C",
+    detail:     "Small reversible oval connector — supports data, video, and power",
+    category:   "USB Cable",
+    extra:       "24-pin · USB 3.2 / USB4 / TB3/4 · Up to 240W",
+    visual:     "usbc",
+  },
+  {
+    term:       "Micro-USB",
+    definition: "Micro Universal Serial Bus",
+    detail:     "Small connector for older mobile devices and accessories",
+    category:   "USB Cable",
+    extra:       "5-pin · USB 2.0 common · Charging + data",
+    visual:     "microusb",
+  },
+  {
+    term:       "Mini-USB",
+    definition: "Mini Universal Serial Bus",
+    detail:     "Mid-size USB connector — older cameras and devices",
+    category:   "USB Cable",
+    extra:       "5-pin · Larger than Micro-USB · Legacy",
+    visual:     null,
+  },
+
+  // ── Storage Cables ───────────────────────────────────────────
+  {
+    term:       "SATA",
+    definition: "Serial Advanced Technology Attachment",
+    detail:     "Connects HDD, SSD, and optical drives to motherboard",
+    category:   "Storage Cable",
+    extra:       "7-pin data · 15-pin power · Up to 6Gbps (SATA III)",
+    visual:     "sata",
+  },
+  {
+    term:       "eSATA",
+    definition: "External Serial ATA",
+    detail:     "External version of SATA — for external hard drives",
+    category:   "Storage Cable",
+    extra:       "Up to 6Gbps · No power over cable · Hot-swappable",
+    visual:     null,
+  },
+  {
+    term:       "Molex",
+    definition: "Molex Power Connector",
+    detail:     "4-pin power connector for older HDDs and optical drives",
+    category:   "Storage Cable",
+    extra:       "12V + 5V rails · White plastic · Legacy",
+    visual:     "molex",
+  },
+
+  // ── Serial/Legacy Cables ─────────────────────────────────────
+  {
+    term:       "RS-232",
+    definition: "Recommended Standard 232",
+    detail:     "Legacy serial communication — used for modems and industrial devices",
+    category:   "Legacy Cable",
+    extra:       "DB-9 or DB-25 connector · COM port",
+    visual:     null,
+  },
+  {
+    term:       "DB-9",
+    definition: "D-subminiature 9-pin",
+    detail:     "Serial port connector for RS-232 legacy devices",
+    category:   "Legacy Cable",
+    extra:       "9-pin trapezoid · COM1/COM2 · Male on PC",
+    visual:     "db9",
+  },
+];
