@@ -236,11 +236,15 @@ function FlashcardView({ cards }) {
 }
 
 // ── Explanation Panel ─────────────────────────────────────────
-function ExplanationPanel({ question, chosen, onNext }) {
+function ExplanationPanel({ question, chosen, apiKey, onNext }) {
   const [explanation, setExplanation] = useState(null);
   const [loading, setLoading]         = useState(false);
 
   useEffect(() => {
+    if (apiKey === "NO_KEY") {
+      setExplanation("Add an API key on the start screen to unlock AI-powered explanations.");
+      return;
+    }
     setLoading(true);
     const prompt = `A student is studying for CompTIA A+ Core 1 (220-1201). They answered a multiple choice question incorrectly.
 
@@ -250,17 +254,25 @@ Correct answer: ${question.correct}
 
 In 2-3 sentences, explain clearly why "${question.correct}" is correct and give one memorable tip or mnemonic to help them remember it. Be direct and specific. Do not start with "I" or repeat the question back.`;
 
-    fetch("/api/anthropic", {
+    fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 180,
+        messages: [{ role: "user", content: prompt }],
+      }),
     })
       .then(r => r.json())
       .then(data => {
-        const text = data?.content?.[0]?.text || "Could not load explanation. Please try again.";
+        const text = data?.content?.[0]?.text || "Could not load explanation — check your API key.";
         setExplanation(text);
       })
-      .catch(() => setExplanation("Could not reach the explanation service. Check your network connection."))
+      .catch(() => setExplanation("Could not reach the API. Check your key and network connection."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -285,7 +297,7 @@ In 2-3 sentences, explain clearly why "${question.correct}" is correct and give 
 }
 
 // ── MCQ View ──────────────────────────────────────────────────
-function MCQView({ questions: initialQs }) {
+function MCQView({ questions: initialQs, apiKey }) {
   const [queue, setQueue]               = useState(() => shuffle([...initialQs]));
   const [pos, setPos]                   = useState(0);
   const [selected, setSelected]         = useState(null);
@@ -443,6 +455,7 @@ function MCQView({ questions: initialQs }) {
         <ExplanationPanel
           question={current}
           chosen={selected}
+          apiKey={apiKey}
           onNext={handleNext}
         />
       )}
@@ -450,11 +463,81 @@ function MCQView({ questions: initialQs }) {
   );
 }
 
+// ── API Key Screen ────────────────────────────────────────────
+function APIScreen({ onSubmit }) {
+  const [key, setKey]     = useState("");
+  const [error, setError] = useState("");
+
+  const handleKey = (e) => {
+    if (e.key === "Enter") {
+      if (!key.trim().startsWith("sk-ant-")) {
+        setError("Key should start with sk-ant- — check and try again.");
+        return;
+      }
+      setError("");
+      onSubmit(key.trim());
+    }
+  };
+
+  return (
+    <div className="api-screen">
+      <div className="api-gem">💎</div>
+      <h1 className="api-title">{APP_TITLE}</h1>
+      <p className="api-subtitle">
+        Enter your Anthropic API key to unlock<br />
+        AI-powered explanations on wrong answers.<br />
+        Flashcards &amp; MCQs work without one.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+        <p className="api-hint" style={{ color: "#666", marginBottom: 0 }}>Don't have a key yet?</p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <a href="https://www.anthropic.com/api" target="_blank" rel="noopener noreferrer"
+            className="api-link" style={{ color: "#c89ef0", border: "1px solid #3a2060", background: "#0d0820" }}>
+            ✦ Sign up for API access
+          </a>
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
+            className="api-link" style={{ color: "#9fd4f7", border: "1px solid #0e2d4a", background: "#050e18" }}>
+            ✦ Go to API key console
+          </a>
+        </div>
+      </div>
+      <input
+        className="api-input"
+        type="password"
+        placeholder="sk-ant-api03-..."
+        value={key}
+        onChange={e => setKey(e.target.value)}
+        onKeyDown={handleKey}
+        autoFocus
+        style={{ width: "100%" }}
+      />
+      <p className="api-hint">Press Enter to initialize · Key is never stored</p>
+      {error && <p className="api-error">{error}</p>}
+      <button className="fc-btn" style={{ borderColor: "#6B3FA0", color: "#c89ef0" }}
+        onClick={() => onSubmit("NO_KEY")}>
+        Continue without API key
+      </button>
+    </div>
+  );
+}
+
 // ── Root App ──────────────────────────────────────────────────
 export default function App() {
+  const [apiKey,     setApiKey]  = useState(null);
   const [tab,        setTab]     = useState("flashcards");
   const [flashcards] = useState(buildFlashcards);
   const [questions]  = useState(buildMCQs);
+
+  if (!apiKey) {
+    return (
+      <>
+        <style>{STYLES}</style>
+        <div className="app-wrap">
+          <APIScreen onSubmit={setApiKey} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -474,7 +557,7 @@ export default function App() {
         <main className="main-area">
           {tab === "flashcards"
             ? <FlashcardView cards={flashcards} />
-            : <MCQView questions={questions} />}
+            : <MCQView questions={questions} apiKey={apiKey} />}
         </main>
       </div>
     </>
