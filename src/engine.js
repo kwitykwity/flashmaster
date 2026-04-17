@@ -81,100 +81,154 @@ export function buildFlashcards() {
 }
 
 // ── MCQ distractor helpers ────────────────────────────────────
-// Each helper deduplicates BEFORE slicing to prevent identical answer choices.
+// Deduplicates and filters empty/undefined values before slicing.
+// Pads with fallbacks if pool runs short to always return exactly 3.
+
+const FALLBACK_TERMS = ["SSH","HTTP","DHCP","RAID 0","DDR4","ATX","VGA","USB-A","NFC","DNS"];
+const FALLBACK_DEFS  = ["Secure Shell","Hypertext Transfer Protocol","Domain Name System","Advanced Technology Extended","Near Field Communication"];
+const FALLBACK_DETAILS = [
+  "Encrypted remote CLI access",
+  "Unencrypted web page delivery",
+  "Resolves domain names to IPs",
+  "Standard full-size motherboard",
+  "Short-range wireless for peripherals",
+];
+
+function clean(arr) {
+  return arr.filter(v => v && typeof v === "string" && v.trim().length > 0);
+}
+
+function pad(arr, fallbacks, n = 3) {
+  const result = [...arr];
+  for (const f of fallbacks) {
+    if (result.length >= n) break;
+    if (!result.includes(f)) result.push(f);
+  }
+  return result.slice(0, n);
+}
+
 function wrongTerm(correct) {
-  return uniqueVals(
-    shuffle(ALL_ITEMS.filter(x => x.term !== correct.term)).map(x => x.term)
-  ).slice(0, 3);
+  const pool = clean(uniqueVals(
+    shuffle(ALL_ITEMS.filter(x => x.term && x.term !== correct.term)).map(x => x.term)
+  ));
+  return pad(pool, FALLBACK_TERMS);
 }
+
 function wrongDef(correct) {
-  return uniqueVals(
-    shuffle(ALL_ITEMS.filter(x => x.definition !== correct.definition)).map(x => x.definition)
-  ).slice(0, 3);
+  const pool = clean(uniqueVals(
+    shuffle(ALL_ITEMS.filter(x => x.definition && x.definition !== correct.definition)).map(x => x.definition)
+  ));
+  return pad(pool, FALLBACK_DEFS);
 }
+
 function wrongDetail(correct) {
-  return uniqueVals(
-    shuffle(ALL_ITEMS.filter(x => x.term !== correct.term)).map(x => x.detail)
-  ).slice(0, 3);
+  const pool = clean(uniqueVals(
+    shuffle(ALL_ITEMS.filter(x => x.term !== correct.term && x.detail)).map(x => x.detail)
+  ));
+  return pad(pool, FALLBACK_DETAILS);
 }
+
 function wrongExtra(correct) {
-  return uniqueVals(
-    shuffle(ALL_ITEMS.filter(x => x.extra !== correct.extra && x.extra)).map(x => x.extra)
-  ).slice(0, 3);
+  const pool = clean(uniqueVals(
+    shuffle(ALL_ITEMS.filter(x => x.extra && x.extra !== correct.extra)).map(x => x.extra)
+  ));
+  return pad(pool, ["Port 22 · TCP","Port 80 · TCP","Port 443 · TCP"]);
 }
+
 function wrongCategory(correct) {
-  const allCats = [...new Set(ALL_ITEMS.map(x => x.category))];
-  return shuffle(allCats.filter(x => x !== correct.category)).slice(0, 3);
+  const allCats = clean([...new Set(ALL_ITEMS.map(x => x.category))]);
+  const pool = shuffle(allCats.filter(x => x !== correct.category));
+  return pad(pool, ["Network Port","WiFi Standard","RAM Type","Storage Device","Power Supply"]);
 }
 
 // ── MCQ builder ───────────────────────────────────────────────
-// Generates 8 question types per item from the universal schema.
-// Pre-built scenario questions (troubleshooting) are passed through directly.
+// Generates question types per item from the universal schema.
+// Question templates are written so the answer is never visible
+// in the question text itself.
+// Pre-built scenario questions are passed through directly.
 // Total pool is shuffled and capped at 500 per session.
 export function buildMCQs() {
   const questions = [];
 
-  // Separate pre-built scenario questions from schema-driven items
-  const scenarios  = ALL_ITEMS.filter(item => item.prebuilt === true);
+  const scenarios   = ALL_ITEMS.filter(item => item.prebuilt === true);
   const schemaItems = ALL_ITEMS.filter(item => !item.prebuilt);
 
-  // Auto-generate 8 question types per schema item
   schemaItems.forEach(item => {
     if (!item.term || !item.definition) return;
 
-    questions.push({
-      q:       `What is the term for: "${item.definition}"?`,
-      correct: item.term,
-      choices: shuffle([item.term, ...wrongTerm(item)]),
-      topic:   "Term Identification",
-    });
+    // Q1 — Given the full name, identify the term/acronym
+    // Template uses definition but answer is the short term —
+    // only safe when definition is clearly different from term
+    // e.g. "Secure Shell" → "SSH" (safe)
+    // e.g. "Zigbee Wireless Protocol" → "Zigbee" (too close — skip)
+    const defWordsInTerm = item.term.toLowerCase().split(/\s+/)
+      .some(w => w.length > 3 && item.definition.toLowerCase().includes(w));
+    if (!defWordsInTerm) {
+      questions.push({
+        q:       `Which term or acronym matches this full name: "${item.definition}"?`,
+        correct: item.term,
+        choices: shuffle([item.term, ...wrongTerm(item)]),
+        topic:   "Term Identification",
+      });
+    }
+
+    // Q2 — Given the term, what does it stand for / mean?
     questions.push({
       q:       `What does "${item.term}" stand for or mean?`,
       correct: item.definition,
       choices: shuffle([item.definition, ...wrongDef(item)]),
       topic:   "Definition",
     });
+
+    // Q3 — Given the term, pick the best description (uses detail field)
     questions.push({
-      q:       `Which best describes "${item.term}"?`,
+      q:       `Which statement best describes "${item.term}"?`,
       correct: item.detail,
       choices: shuffle([item.detail, ...wrongDetail(item)]),
       topic:   "Key Detail",
     });
+
+    // Q4 — Given the description, identify the term (reverse of Q3)
     questions.push({
-      q:       `"${item.detail}" — which term does this describe?`,
+      q:       `A technician describes: "${item.detail}" — which term is being described?`,
       correct: item.term,
       choices: shuffle([item.term, ...wrongTerm(item)]),
       topic:   "Detail Lookup",
     });
-    questions.push({
-      q:       `Which category does "${item.term}" belong to?`,
-      correct: item.category,
-      choices: shuffle([item.category, ...wrongCategory(item)]),
-      topic:   "Category",
-    });
+
+    // Q5 — Extra fact → identify the term (only when extra exists and
+    // doesn't contain the term itself)
     if (item.extra) {
+      const extraRevealsTerm = item.extra.toLowerCase().includes(item.term.toLowerCase());
+      if (!extraRevealsTerm) {
+        questions.push({
+          q:       `Which term is associated with this characteristic: "${item.extra}"?`,
+          correct: item.term,
+          choices: shuffle([item.term, ...wrongTerm(item)]),
+          topic:   "Fact Lookup",
+        });
+      }
+
+      // Q6 — Given the term, pick the correct extra fact
       questions.push({
-        q:       `Which additional fact is associated with "${item.term}"?`,
+        q:       `Which additional detail applies to "${item.term}"?`,
         correct: item.extra,
         choices: shuffle([item.extra, ...wrongExtra(item)]),
         topic:   "Additional Detail",
       });
-      questions.push({
-        q:       `"${item.extra}" — which term does this apply to?`,
-        correct: item.term,
-        choices: shuffle([item.term, ...wrongTerm(item)]),
-        topic:   "Fact Lookup",
-      });
     }
+
+    // Q7 — Scenario-style: pick the right tool/protocol for a job
+    // Uses detail phrased as a "what would you use for..." question
     questions.push({
-      q:       `"${item.definition}" — which category does this belong to?`,
-      correct: item.category,
-      choices: shuffle([item.category, ...wrongCategory(item)]),
-      topic:   "Category Lookup",
+      q:       `A network technician needs to: "${item.detail}". Which term or protocol applies?`,
+      correct: item.term,
+      choices: shuffle([item.term, ...wrongTerm(item)]),
+      topic:   "Applied Knowledge",
     });
   });
 
-  // Add pre-built scenario questions directly
+  // Pass pre-built scenario questions through directly
   scenarios.forEach(item => {
     questions.push({
       q:       item.q,
@@ -184,8 +238,16 @@ export function buildMCQs() {
     });
   });
 
-  // Shuffle full pool and cap at 500 per session
-  return shuffle(questions).slice(0, 500);
+  // Validate — remove any question where correct answer is empty
+  // or any choice is empty or undefined
+  const valid = questions.filter(q =>
+    q.correct &&
+    q.choices.length === 4 &&
+    q.choices.every(c => c && c.trim().length > 0) &&
+    q.choices.includes(q.correct)
+  );
+
+  return shuffle(valid).slice(0, 500);
 }
 
 export const APP_TITLE    = "FlashMaster";
