@@ -252,7 +252,13 @@ In 2-3 sentences, explain clearly why "${question.correct}" is correct and give 
           <span className="shimmer-text">Fetching explanation...</span>
         </div>
       ) : (
-        <div className="explain-body">{explanation}</div>
+        <div className="explain-body"
+          dangerouslySetInnerHTML={{
+            __html: (explanation || "")
+              .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+              .replace(/\n/g, "<br/>")
+          }}
+        />
       )}
       <button className="explain-next" onClick={onNext}>Next Question →</button>
     </div>
@@ -397,8 +403,8 @@ function MCQView({ questions: initialQs }) {
           <span className="counter-label">Total ✓</span>
         </div>
         <div className="counter-gem" style={{ background: "#1a0d2e", borderColor: "#6B3FA0", color: "#c89ef0" }}>
-          <span className="counter-num">{queue.length}</span>
-          <span className="counter-label">Remaining</span>
+          <span className="counter-num">{cycleCorrect + cycleMisses}</span>
+          <span className="counter-label">Session</span>
         </div>
       </div>
 
