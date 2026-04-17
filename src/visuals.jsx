@@ -1,5 +1,5 @@
 // ============================================================
-//  VISUALS.JS — DO NOT EDIT (unless adding new illustrations)
+//  VISUALS.JSX — DO NOT EDIT (unless adding new illustrations)
 //  SVG illustration functions for flashcard backs.
 //  Each function returns a JSX-compatible SVG element.
 //  Keys must match the `visual` field in data files.
