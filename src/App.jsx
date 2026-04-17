@@ -346,16 +346,14 @@ function MCQView({ questions: initialQs }) {
       const newSeen = new Set(seen);
       newSeen.add(current._id);
       setSeen(newSeen);
-      // Remove current from queue (don't reinsert)
+      // Remove current from queue — pos stays the same, next item slides into place
       newQueue.splice(pos, 1);
-      // If queue is exhausted before shuffle trigger, quietly reshuffle
-      // only unseen questions so the user keeps going
-      if (newQueue.length <= pos) {
+      // If queue exhausted before shuffle trigger, reshuffle unseen questions
+      if (newQueue.length === 0 || pos >= newQueue.length) {
         const unseen = shuffle([...initialQs])
-          .map((q, i) => ({ ...q, _id: i }))
+          .map((q, i) => ({ ...q, _id: i + Date.now() }))
           .filter(q => !newSeen.has(q._id));
         if (unseen.length === 0) {
-          // All questions answered correctly — trigger shuffle as reward
           triggerShuffle();
           return;
         }
@@ -363,18 +361,20 @@ function MCQView({ questions: initialQs }) {
         setPos(0);
       } else {
         setQueue(newQueue);
+        // pos stays the same — the next question slides into current pos
       }
     } else {
-      // Wrong answer — remove from current position and reinsert within next 10
+      // Wrong — remove from current pos, reinsert within next 10
       newQueue.splice(pos, 1);
       const reinsertAt = Math.min(pos + Math.floor(Math.random() * 10), newQueue.length);
       newQueue.splice(reinsertAt, 0, { ...current });
       setQueue(newQueue);
+      setPos(p => p + 1);
     }
 
+    setTotalAnswered(t => t + 1);
     setSelected(null);
     setIsCorrect(null);
-    if (!isCorrect) setPos(p => p + 1);
   };
 
   const progressPct = Math.min((cycleCorrect / 75) * 100, 100);
@@ -398,7 +398,7 @@ function MCQView({ questions: initialQs }) {
           <span className="counter-label">Total ✓</span>
         </div>
         <div className="counter-gem" style={{ background: "#1a0d2e", borderColor: "#6B3FA0", color: "#c89ef0" }}>
-          <span className="counter-num">{pos + 1}</span>
+          <span className="counter-num">{totalAnswered + 1}</span>
           <span className="counter-label">Question</span>
         </div>
       </div>
@@ -416,7 +416,7 @@ function MCQView({ questions: initialQs }) {
           <span className="mcq-band-text">{current.topic}</span>
         </div>
         <div className="mcq-body">
-          <span className="mcq-q-label">Question {pos + 1}</span>
+          <span className="mcq-q-label">Question {totalAnswered + 1}</span>
           <p className="mcq-question">{current.q}</p>
           <div className="mcq-choices">
             {current.choices.map((choice, ci) => {

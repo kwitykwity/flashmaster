@@ -196,11 +196,14 @@ export function buildMCQs() {
       topic:   "Detail Lookup",
     });
 
-    // Q5 — Extra fact → identify the term (only when extra exists and
-    // doesn't contain the term itself)
+    // Q5 — Extra fact → identify the term
+    // Skip if: extra contains the term, OR extra has multiple facts
+    // joined by · / , which makes it read like a list rather than
+    // a single clean clue — and often gives away the answer
     if (item.extra) {
       const extraRevealsTerm = item.extra.toLowerCase().includes(item.term.toLowerCase());
-      if (!extraRevealsTerm) {
+      const extraIsMultiFact = /[·\/,]/.test(item.extra);
+      if (!extraRevealsTerm && !extraIsMultiFact) {
         questions.push({
           q:       `Which term is associated with this characteristic: "${item.extra}"?`,
           correct: item.term,
@@ -210,12 +213,15 @@ export function buildMCQs() {
       }
 
       // Q6 — Given the term, pick the correct extra fact
-      questions.push({
-        q:       `Which additional detail applies to "${item.term}"?`,
-        correct: item.extra,
-        choices: shuffle([item.extra, ...wrongExtra(item)]),
-        topic:   "Additional Detail",
-      });
+      // Only generate if the extra field is a single clean fact (no multi-values)
+      if (!extraIsMultiFact) {
+        questions.push({
+          q:       `Which additional detail applies to "${item.term}"?`,
+          correct: item.extra,
+          choices: shuffle([item.extra, ...wrongExtra(item)]),
+          topic:   "Additional Detail",
+        });
+      }
     }
 
     // Q7 — Scenario-style: pick the right tool/protocol for a job
