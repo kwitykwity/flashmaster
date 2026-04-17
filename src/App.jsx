@@ -260,8 +260,12 @@ In 2-3 sentences, explain clearly why "${question.correct}" is correct and give 
 }
 
 function MCQView({ questions: initialQs }) {
-  const [queue, setQueue]               = useState(() => shuffle([...initialQs]));
+  const [allQs] = useState(() =>
+    shuffle([...initialQs]).map((q, i) => ({ ...q, _id: i }))
+  );
+  const [queue, setQueue]               = useState(() => [...allQs]);
   const [pos, setPos]                   = useState(0);
+  const [seen, setSeen]                 = useState(() => new Set());
   const [selected, setSelected]         = useState(null);
   const [isCorrect, setIsCorrect]       = useState(null);
   const [shaking, setShaking]           = useState(false);
@@ -285,8 +289,10 @@ function MCQView({ questions: initialQs }) {
 
   const triggerShuffle = () => {
     toast("✦ Deck Shuffled — New Cycle Begins! ✦");
-    setQueue(shuffle([...initialQs]));
+    const reshuffled = shuffle([...initialQs]).map((q, i) => ({ ...q, _id: i }));
+    setQueue(reshuffled);
     setPos(0);
+    setSeen(new Set());
     setSelected(null);
     setIsCorrect(null);
     setCycleCorrect(0);
@@ -332,19 +338,43 @@ function MCQView({ questions: initialQs }) {
 
   const handleNext = () => {
     if (pendingShuffle) { triggerShuffle(); return; }
+
     const newQueue = [...queue];
+
     if (isCorrect) {
-      newQueue.splice(Math.min(pos + 21, newQueue.length), 0, { ...current });
+      // Mark as seen — retire this question for the rest of the cycle
+      const newSeen = new Set(seen);
+      newSeen.add(current._id);
+      setSeen(newSeen);
+      // Remove current from queue (don't reinsert)
+      newQueue.splice(pos, 1);
+      // If queue is exhausted before shuffle trigger, quietly reshuffle
+      // only unseen questions so the user keeps going
+      if (newQueue.length <= pos) {
+        const unseen = shuffle([...initialQs])
+          .map((q, i) => ({ ...q, _id: i }))
+          .filter(q => !newSeen.has(q._id));
+        if (unseen.length === 0) {
+          // All questions answered correctly — trigger shuffle as reward
+          triggerShuffle();
+          return;
+        }
+        setQueue(unseen);
+        setPos(0);
+      } else {
+        setQueue(newQueue);
+      }
     } else {
-      newQueue.splice(
-        Math.min(pos + 1 + Math.floor(Math.random() * 10), newQueue.length),
-        0, { ...current }
-      );
+      // Wrong answer — remove from current position and reinsert within next 10
+      newQueue.splice(pos, 1);
+      const reinsertAt = Math.min(pos + Math.floor(Math.random() * 10), newQueue.length);
+      newQueue.splice(reinsertAt, 0, { ...current });
+      setQueue(newQueue);
     }
-    setQueue(newQueue);
-    setPos(p => p + 1);
+
     setSelected(null);
     setIsCorrect(null);
+    if (!isCorrect) setPos(p => p + 1);
   };
 
   const progressPct = Math.min((cycleCorrect / 75) * 100, 100);
