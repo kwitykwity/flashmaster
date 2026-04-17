@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 🎴 FlashMaster
 
 A simple flashcard and quiz app designed as a supplemental study tool for A+ certification review YouTube videos. No setup needed for users — just click a link and start studying.
@@ -56,7 +55,6 @@ If you want to run the app on your own computer:
 - Flashcards and MCQs work without an API key.
 - The API key should start with `sk-ant-` if used.
 
-=======
 🎴 FlashMaster
 
 A simple flashcard and quiz app designed as a supplemental study tool for A+ certification review YouTube videos. No setup needed for users — just click a link and start studying.
@@ -114,4 +112,3 @@ If you want to run the app on your own computer:
 - Flashcards and MCQs work without an API key.
 - The API key should start with `sk-ant-` if used.
 
->>>>>>> 908e742965751e55061aa42dff7c3b0466617300

@@ -461,7 +461,7 @@ export function visual_ddr3() {
     <SVGWrap w={220} h={130}>
       <rect x="10" y="20" width="200" height="50" rx="3" fill={C.pcb} stroke={C.dkgreen} strokeWidth="1.5"/>
       {Array.from({length:8},(_,i) => (
-        <rect key={i} x={16 + i*24} y={26} width={18} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"}/>
+        <rect key={i} x={16 + i*24} y={26} width={18} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"/>
       ))}
       <rect x="10" y="66" width="180" height="8" rx="1" fill="#2a2a2a"/>
       <rect x="130" y="64" width="12" height="12" rx="1" fill="#0e0e0e"/>
@@ -478,7 +478,7 @@ export function visual_ddr4() {
     <SVGWrap w={220} h={130}>
       <rect x="10" y="20" width="200" height="50" rx="3" fill={C.pcb} stroke={C.dkgreen} strokeWidth="1.5"/>
       {Array.from({length:8},(_,i) => (
-        <rect key={i} x={16 + i*24} y={26} width={18} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"}/>
+        <rect key={i} x={16 + i*24} y={26} width={18} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"/>
       ))}
       <rect x="10" y="66" width="200" height="8" rx="1" fill="#2a2a2a"/>
       <rect x="108" y="64" width="12" height="12" rx="1" fill="#0e0e0e"/>
@@ -495,7 +495,7 @@ export function visual_ddr5() {
     <SVGWrap w={220} h={130}>
       <rect x="10" y="20" width="200" height="50" rx="3" fill={C.pcbblue} stroke="#3a3a8a" strokeWidth="1.5"/>
       {Array.from({length:10},(_,i) => (
-        <rect key={i} x={12 + i*20} y={26} width={14} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"}/>
+        <rect key={i} x={12 + i*20} y={26} width={14} height={16} rx="2" fill="#111" stroke="#333" strokeWidth="1"/>
       ))}
       <rect x="10" y="66" width="200" height="8" rx="1" fill="#2a2a2a"/>
       <rect x="130" y="64" width="12" height="12" rx="1" fill="#0e0e0e"/>
@@ -512,7 +512,7 @@ export function visual_sodimm() {
     <SVGWrap w={220} h={130}>
       <rect x="30" y="24" width="160" height="44" rx="3" fill={C.pcb} stroke={C.dkgreen} strokeWidth="1.5"/>
       {Array.from({length:6},(_,i) => (
-        <rect key={i} x={36 + i*24} y={30} width={18} height={14} rx="2" fill="#111" stroke="#333" strokeWidth="1"}/>
+        <rect key={i} x={36 + i*24} y={30} width={18} height={14} rx="2" fill="#111" stroke="#333" strokeWidth="1"/>
       ))}
       <rect x="30" y="64" width="148" height="8" rx="1" fill="#2a2a2a"/>
       <rect x="120" y="62" width="10" height="10" rx="1" fill="#0e0e0e"/>
