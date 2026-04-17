@@ -397,8 +397,8 @@ function MCQView({ questions: initialQs }) {
           <span className="counter-label">Total ✓</span>
         </div>
         <div className="counter-gem" style={{ background: "#1a0d2e", borderColor: "#6B3FA0", color: "#c89ef0" }}>
-          <span className="counter-num">{totalAnswered}</span>
-          <span className="counter-label">Answered</span>
+          <span className="counter-num">{queue.length}</span>
+          <span className="counter-label">Remaining</span>
         </div>
       </div>
 
@@ -415,7 +415,7 @@ function MCQView({ questions: initialQs }) {
           <span className="mcq-band-text">{current.topic}</span>
         </div>
         <div className="mcq-body">
-          <span className="mcq-q-label">Question {totalAnswered + 1}</span>
+          <span className="mcq-q-label">Question {cycleCorrect + cycleMisses + 1}</span>
           <p className="mcq-question">{current.q}</p>
           <div className="mcq-choices">
             {current.choices.map((choice, ci) => {
